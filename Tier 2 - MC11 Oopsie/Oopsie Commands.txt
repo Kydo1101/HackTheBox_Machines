@@ -35,6 +35,16 @@ HACK THE BOX - OOPSIE MACHINE
 
 - cat * | grep -i passw*                                                                                                                    -Comando que hace una busqueda a traves de todos los archivos que contengan la palabra "passw..." y muestra la linea en la que se encuentran
 
-            -De ahi encontramos las credenciales (["username"]==="admin" && $_POST["password"]==="MEGACORP_4dm1n!!")
+            -De ahi encontramos las credenciales (["username"]==="admin" && $_POST["password"]==="MEGACORP_4dm1n!!"), asi que verificaremos con que usuarios podemos usar las credenciales encontradas
+
+- cat /etc/password                                                                                                                         -Listamos los usuarios presentes en el sistema, y encontramos a "robert:x:1000:1000:robert:/home/robert:/bin/bash"
+- su robert                                                                                                                                 -Intentamos a acceder al usuario mediante el comando su y el pass anteriormente encontrado, pero nos remite que la pass es incorrecta asi que seguimos buscando 
+- cat db.php                                                                                                                                -En el archivo, encontramos la credencial "conn = mysqli_connect('localhost','robert','M3g4C0rpUs3r!','garage');"
+- su robert                                                                                                                                 -Intentamos acceder con la segunda pass obtenida "M3g4C0rpUs3r!" y lo logramos.
+- sudo -l                                                                                                                                   -Ejecutamos el comando para listar los privilegios del usuario actual, pero al ingresar la credencial, no es posible asi que, seguimos buscando información.
+- id                                                                                                                                        -Al ejecutar nos mostrará la información de identificación del usuario actual. User ID - Group ID - Grupos secundarios, etc.
+
+            -De donde encontramos que robert pertenece a un grupo segundario "Bugtracker" [uid=1000(robert) gid=1000(robert) groups=1000(robert),1001(bugtracker)]
+            
 
 
