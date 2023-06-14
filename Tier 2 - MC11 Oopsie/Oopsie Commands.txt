@@ -1,9 +1,40 @@
 HACK THE BOX - OOPSIE MACHINE
 
-- sudo nmap -sC -sV -sS 10.129.95.191																										-Escaneo de puertos, encontramos puerto 22 y 80 con un servidor Apache con Ubuntu
+- sudo nmap -sC -sV -sS 10.129.54.45																									    -Escaneo de puertos, encontramos puerto 22 y 80 con un servidor Apache con Ubuntu
 
             -Nos conectamos al servidor Apache desde Firefox http://10.129.95.191, verificamos la página y buscamos alguna subdirectorio en el que podamos loguearnos, para ello utilizaremos burpsuite
             -Burpsuite es una herramienta diseñada para hacer pentesting de aplicaciones web. Burpsuite nos da utilidades como: Proxy web, Spider, Escaner de seguridad, intruder, Repeater, Automation.
             -Para su uso, modificamos las Settings de Proxy en Firefox y colocamos "Manual Proxy Configuration" y configuracion HTTP Proxy: 127.0.0.1 y en Port: 8080, ademas activamos la opción "Also use the proxy for HTTPS"
-            -Una vez modificado, abrimos Burpsuite, nos colocamos en la pestaña "Proxy" y colocamos Intercept en off, posterior nos dirigimos a target y recargamos nuestra página
-            
+            -Una vez modificado, abrimos Burpsuite, nos colocamos en la pestaña "Proxy" y colocamos Intercept en off, posterior nos dirigimos a target y recargamos la página, de modo tal que podemos visualizar en burpuiste el trafico interceptado con todas las peticiones realizadas, de donde podemos encontrar una subdirectorio con el nombre http://10.129.54.45/cdn-cgi/login/ 
+            -Nos conectamos a http://10.129.54.45/cdn-cgi/login/ y podemos ver que existe la posibilidad de ingresar en modo "Guest", y es a partir de donde tratamos de encontrar alguna vulnerabilidad
+            -Con Wappalyzer verificamos que la web está escrita en PHP, para lo cual navegando por las pestañas encontramos una de "Uploads", para ello trataremos de realizar un "Reverse Shell Connection", pero primeramente necesitamos tener acceso a la pestaña Upload, que en el caso de Guests, no es posible
+            -En la pestaña Account, como guest tenemos un numero Access ID "2233", y si lo modificamos en la URL por un "1", encontraremos que nos carga el AccesID=34322 y Client=Admin, lo cual podemos tratar de explotar en la pagina pestaña de uploads a traves de las Coockies "Storage" del sitio.
+            -Nos vamos a la pestaña "Uploads" y modificamos las coockies - Storage, con la opcion "Inspeccionar en firefox", reemplazamos por las credenciales de Admin encontradas anteriormente y recargamos la pagina, ganando acceso y pudiendo cargar archivos.
+
+- locate php-reverse-shell.php                                                                                                              -Encontramos el archivo en la ruta  "/usr/share/webshells/php/php-reverse-shell.php"
+- cd ~/Hacking/HackTheBox/Oopsie                                                                                                            -Nos movemos al directorio de trabajo de la maquina
+- cp /usr/share/webshells/php/php-reverse-shell.php ./                                                                                      -Copiamos el archivo desde su directorio al directorio de trabajo
+- sudo vi php-reverse-shell.php                                                                                                             -Modificamos el archivo para poder usar el reverse shell
+- ifconfig                                                                                                                                  -Verificamos cual es nuestra IP tun0 
+
+            -Modificamos la IP (Colocamos la IP de tun0) y modificamos la opcion Port (Colocamos el puerto a traves del cual se establecerá el RSC)
+            -Una vez modificadas los dos parámetros en el archivo .php, procedemos a subirlo a la web.
+            -Ya hemos subido el archivo, pero necesitamos poder ejecutarlo para establecer la RSC, para ello trataremos de encontrar el subdirectorio en el que se encuentre alojado nuestro archivo cargado, para ello hacemos uso de gobuster y hacemos una enumeración de subdirectorios.
+
+- gobuster dir --url http://10.129.54.45 -w /usr/share/wordlists/dirbuster/directory-list-2.3-small.txt -x php,html                         -Uso de gobuster para enumeración de subdirectorios, con el cual encontramos "http://10.129.54.45/uploads", y tratamos de acceder al directorio, pero no tenemos autorización asi que probamos unicamente ejecutando el archivo desde la url. 
+
+            -Antes de ejecutar el archivo desde la URL, procedemos a establecer un netcat listene a traves del puerto configurado pra poder establecer la RSC una vez ejecutado el archivo .php
+
+- nc -lvnp 4444                                                                                                                             -Establecemos el Listener en el puerto 4444
+
+            -Colocamos la URL http://10.129.54.45/uploads/php-reverse-shell.php, y ejecutamos, de modo que el reverse shell se establecerá en nuestro terminal de comandos. (Si no se establece a la primera, regresar a la pagina uploads, cargar nuevamente el archivo y posterior usar la url para la conexion)
+
+- python3 -c 'import pty;pty.spawn("/bin/bash")'                                                                                            -Al ejecutar este comando, se abrirá una nueva shell interactiva de Bash que permitirá al usuario interactuar con el sistema operativo y ejecutar comandos de Bash. Esto puede ser útil en situaciones donde se necesita interactuar directamente con la shell para realizar tareas específicas o explorar el sistema en mayor profundidad.
+
+            -Como la web utiliza PHP y SQl, revisando los directorios nos encontramos con la siguiente ruta /var/www/html/cdn-cgi/login, en la cual encontramos 4 archivos (admin.php  db.php  index.php  script.js)
+
+- cat * | grep -i passw*                                                                                                                    -Comando que hace una busqueda a traves de todos los archivos que contengan la palabra "passw..." y muestra la linea en la que se encuentran
+
+            -De ahi encontramos las credenciales (["username"]==="admin" && $_POST["password"]==="MEGACORP_4dm1n!!")
+
+
