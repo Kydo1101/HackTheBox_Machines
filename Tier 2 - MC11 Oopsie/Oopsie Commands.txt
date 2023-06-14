@@ -1,2 +1,9 @@
 HACK THE BOX - OOPSIE MACHINE
 
+- sudo nmap -sC -sV -sS 10.129.95.191																										-Escaneo de puertos, encontramos puerto 22 y 80 con un servidor Apache con Ubuntu
+
+            -Nos conectamos al servidor Apache desde Firefox http://10.129.95.191, verificamos la página y buscamos alguna subdirectorio en el que podamos loguearnos, para ello utilizaremos burpsuite
+            -Burpsuite es una herramienta diseñada para hacer pentesting de aplicaciones web. Burpsuite nos da utilidades como: Proxy web, Spider, Escaner de seguridad, intruder, Repeater, Automation.
+            -Para su uso, modificamos las Settings de Proxy en Firefox y colocamos "Manual Proxy Configuration" y configuracion HTTP Proxy: 127.0.0.1 y en Port: 8080, ademas activamos la opción "Also use the proxy for HTTPS"
+            -Una vez modificado, abrimos Burpsuite, nos colocamos en la pestaña "Proxy" y colocamos Intercept en off, posterior nos dirigimos a target y recargamos nuestra página
+            
