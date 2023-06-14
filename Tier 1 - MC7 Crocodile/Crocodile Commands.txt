@@ -1,0 +1,23 @@
+HACK THE BOX - CROCODILE MACHINE
+
+- sudo nmap -sV -sC -sS 10.129.50.233															-Escaneamos los puertos a través del comando NMAP, de lo cual encontramos el puerto 21 que correspode a FTP, abierto, por lo tanto nos conectamos
+- ftp 10.129.50.233																				-Nos conectamos al puerto y nos logueamos con el usuario por defecto "anonymous", el cual no necesita ingresar un password.
+
+	Dentro de FTP>
+
+- ls																							-Vemos los archivos almacenados en el servidor FTP
+- get allowed.userlist																			-Con el comando get, descargamos el archivo hacia nuestro host
+- get allowed.userlist.passwd																	-Descargamos el segundo archivo
+
+	Salimos y volvemos a conectarnos para probar con los usuarios y contraseñas obtenidos
+	
+- ftp 10.129.50.233																				-Nos loguemos con los usuarios pero, unicamente "anonymous" tiene acceso por lo tanto probamos otro metodo
+
+	Al realizar el analisis con NMAP descubrimos un servidor web apache, por lo tanto nos conectamos a la dirección ip
+
+- http://10.129.50.233																			-Dentro de la pagina empezamos a inspeccionar y tratamos de hallar donde poder usar las credenciales encontradas anteriormente
+- gobuster dir --url http://10.129.50.233 -w /usr/share/wordlist/dirbuster... -x php,html		-Usamos dirbuster para encontrar posibles variaciones de la url que podamos explotar como vulnerabilidad (-x se usa para especificar un tipo de extension)
+
+	Posterior a encontrar http://10.129.50.233/login.php probamos con las credenciales obtenidas y notamos que tenemos acceso.
+	
+	FIN

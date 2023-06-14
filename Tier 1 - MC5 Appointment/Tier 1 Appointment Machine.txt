@@ -1,0 +1,9 @@
+HACK THE BOX - TIER 1 APPOINTMENT MACHINE
+
+- sudo nmap -sV -sC -sS 10.129.54.249																											-Analisis de los puertos en la maquina objetivo
+- gobuster dir --url  http://10.129.54.249 -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 50								-Usamos Gobuster para determinar los posibles directorios a explotar by bruteforcing en la URL. (especificamos dir y --url porque ene ste caso estamos usando dirbuster no para encontrar dominios sino para la busqueda de directorios alternos que peudan ser vulnerables)
+
+SQL Injection
+
+- admin'# --> (SQL PETITION: SELECT * FROM user WHERE username='admin'# AND password='a')														-Como la pagina no tiene una debida protección contra SQL Injection, podemos usar los comandos en SQL para vulnerar el LOGIN a la pagina, comentado todo lo que se usa en el query realizado despues del admin y asi ingresando a la pagina solo con un username y sin validación de password.
+
