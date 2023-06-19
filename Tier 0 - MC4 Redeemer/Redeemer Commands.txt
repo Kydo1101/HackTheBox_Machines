@@ -13,5 +13,5 @@ HACK THE BOX - REDEEMER MACHINE
 - KEYS *                                                                                                            -Mostamos las llaves disponibles (stor - flag - temp - numb)
 - GET flag                                                                                                          -Obtenemos la Key con el flag
 
-        MAQUINA TERMINADA
+         MAQUINA TERMINADA
 
