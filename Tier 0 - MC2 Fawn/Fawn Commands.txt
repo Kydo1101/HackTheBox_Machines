@@ -1,0 +1,8 @@
+HACK THE BOX - FAWN MACHINE
+
+- sudo nmap -sC -sV -sS -Pn 10.129.69.20 -oN nmapFawn                                                               -Escaneo de puertos, encontramos el puerto 21 correspondiente a FTP abierto.
+- ftp 10.129.69.20                                                                                                  -Nos conetamos al puerto FTP y usamos el usuario "Anonymous"
+- get flag.txt                                                                                                      -Descargamos el archivo con el flag
+
+
+        Maquina Terminada

@@ -1,0 +1,17 @@
+HACK THE BOX - REDEEMER MACHINE
+
+- sudo nmap -sC -sV -sS -p 1-10000 10.129.154.52 -oN nmapRedeemer                                                   -Escaneo de los 10000 primeros puertos, dado que no se encontraron puertos abiertos en un primer scan de los 1000 puertos por defecto, encontramos el puerto 6379 (Redis) abierto
+
+            -Encontramos el puerto 6379 abierto corriendo REDIS, que es un almacén de estructura de datos en memoria, utilizado como base de datos. Comunmente se puede acceder a REDIS sin credenciales, por lo tanto ejecutamos:
+
+- redis-cli -h 10.129.154.52                                                                                        -Nos conectamos mediante el comando "redis-cli" y especificamos un host "-h"
+- info                                                                                                              -Verificamos la información de la db, encontramos una DB y 4 keys en ella, para lo cual accedemos
+
+            -En el apartado "# Keyspace", encontramos la siguiente información "db0:keys=4,expires=0,avg_ttl=0", de la que podemos inducir que existe una DB (DB0), con 4 keys.
+
+- SELECT 0                                                                                                          -Seleccionamos la DB 
+- KEYS *                                                                                                            -Mostamos las llaves disponibles (stor - flag - temp - numb)
+- GET flag                                                                                                          -Obtenemos la Key con el flag
+
+        MAQUINA TERMINADA
+

