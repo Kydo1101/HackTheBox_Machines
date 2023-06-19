@@ -1,0 +1,9 @@
+HACK THE BOX - MEW MACHINE
+
+- sudo nmap -sC -sV -sS -Pn 10.129.58.91 -oN nmapMeow                                                                       -Escaneo de puertos con Nmap, vemos que tenemos el puerto 23 "Telnet" abierto, por lo tanto intentamos conectarnos a el
+- telnet 10.129.58.91                                                                                                       -Nos conectamos e intentamos con algunos de los usuarios por defecto mas utilizados (admin - administrator - root) y sin una pass ingresamos
+- ls                                                                                                                        -Listamos los archivos 
+- cat flag.txt                                                                                                              -Visualizamos nuestro archivo flag
+
+
+        MAQUINA TERMINADA
