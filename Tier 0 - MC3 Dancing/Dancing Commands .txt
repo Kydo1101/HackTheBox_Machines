@@ -9,6 +9,6 @@ HACK THE BOX - DANCING MACHINE
 - ls                                                                                                                -Listamos el contenido del servidor, en el que encontramos dos directorios (James.P y Amy.J), en una busuqeda encontramos un archivo flag en el directorio de James.P
 - cd James.P                                                                                                        -Nos dirigimos al directorio James.Para
 - get flag.txt                                                                                                      -Descargamos el archivo con el FLAG
-- cat flag.txt
+- cat flag.txt                                                                                                      -Mostramos la información de la flag 
 
-    MAQUINA TERMINADA
+        MAQUINA TERMINADA
