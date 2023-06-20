@@ -20,4 +20,4 @@ HACK THE BOX - CROCODILE MACHINE
 
 	Posterior a encontrar http://10.129.50.233/login.php probamos con las credenciales obtenidas y notamos que tenemos acceso.
 	
-	FIN
+	MAQUINA TERMINADA
