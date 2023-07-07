@@ -10,7 +10,7 @@ HACK THE BOX - ARCHETYPE MACHINE
 			- A través del uso de mssqlclient.py con impacket, Impacket is focused on providing low-level programmatic access to the packets and for some protocols (e.g. SMB1-3 and MSRPC)
 
 - locate mssqclient.py																														-Localizamos la ubicación del script para ejecutarlo desde su ruta, utilizando las credenciales anteriormente obtenidas 
-- sudo python3 /usr/share/doc/python3-impacket/examples/mssqlclient.py ARCHETYPE\sql_svc@10.129.242.95										-Con el formato  python3 ~\mssqlclient.py [Domin]/[UserID]@[IP_ADDRESS] conectamos al servidor SQL, posterior a ejectuar el comando nos pedira PASSWORD el cual colocamos segun las credenciales
+- sudo python3 /usr/share/doc/python3-impacket/examples/mssqlclient.py ARCHETYPE\sql_svc@10.129.242.95	-windows-auth						-Con el formato  python3 ~\mssqlclient.py [Domin]/[UserID]@[IP_ADDRESS] conectamos al servidor SQL, posterior a ejectuar el comando nos pedira PASSWORD el cual colocamos segun las credenciales
 
 			- Dentro del servidor SQL ejecutaremos el shell CMD, para el cual tenemos que verificar si se encuentra habilitado y sino habilitarlo, para poder utilizar el shell para ejecutar comandos
 			
